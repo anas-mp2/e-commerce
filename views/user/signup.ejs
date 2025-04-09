@@ -1,12 +1,11 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
+    <title>Signup Page</title>
     <link rel="stylesheet" href="/styles/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSF7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
     <%- include("../partials/user/header") %>
@@ -22,14 +21,14 @@
                 <div class="login-form">
                     <h2>Create an Account</h2>
                     <h5>Enter Your Details below</h5>
-                    <form id="signupform" method="post" action="/signup">
+                    <form id="signupform" method="post">
                         <input type="text" name="email" id="email" placeholder="Email" />
                         <div id="error1" class="error-message"></div>
                         <input type="password" name="password" id="password" placeholder="Password" />
                         <div id="error2" class="error-message"></div>
                         <input type="password" name="cpassword" id="cpassword" placeholder="Confirm Password" />
                         <div id="error3" class="error-message"></div>
-                        <p style="color: red;"><% if (message) { %><%= message %><% } %></p>
+                        <div id="generalError" class="error-message" style="color: red;"><% if (message) { %><%= message %><% } %></div>
                         <div class="form-actions">
                             <button type="submit" class="login-button">Signup</button>
                             <a href="/auth/google/logout" class="google-signup-button">
@@ -44,95 +43,136 @@
         </div>
     </div>
     
-  
+    <script>
+        const signupform = document.getElementById('signupform');
+        const emailid = document.getElementById('email');
+        const passwordid = document.getElementById('password');
+        const cpasswordid = document.getElementById('cpassword');
+        const error1 = document.getElementById('error1');
+        const error2 = document.getElementById('error2');
+        const error3 = document.getElementById('error3');
+        const generalError = document.getElementById('generalError');
 
-  <script>
-    const signupform=document.getElementById('signupform');
-    const emailid=document.getElementById('email');
-    const passwordid=document.getElementById('password');
-    const cpasswordid=document.getElementById('cpassword');
-    const error1=document.getElementById('error1');
-    const error2=document.getElementById('error2');
-    const error3=document.getElementById('error3');
-    
-
-    function validateEmail(){
-            const emailVal=emailid.value.trim();
+        function validateEmail() {
+            const emailVal = emailid.value.trim();
             const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-
-            if(emailVal && !emailPattern.test(emailVal)){
-               error1.style.display="block";
-               error1.innerHTML="Invalid Email Format";
-               return false;
-            }
-            else{
-                error1.style.display="none";
-                error1.innerHTML="";
+            if (emailVal && !emailPattern.test(emailVal)) {
+                error1.style.display = "block";
+                error1.innerHTML = "Invalid Email Format";
+                return false;
+            } else {
+                error1.style.display = "none";
+                error1.innerHTML = "";
                 return true;
             }
         }
         
-        function checkValues(e){
-            const emailVal=emailid.value.trim();
-            const passwordVal=passwordid.value.trim();
-            if(! emailVal || !passwordVal){
-                alert("All fields are required");
-                e.preventDefault();
-                return false;
-            }
-            return true;
-        }
-
-        function validatePassword(){
-            const passwordVal=passwordid.value.trim();
-            if(passwordVal && passwordVal.length<8){
-                error2.style.display="block";
-                error2.innerHTML="Password should contain atleast 8 characters";
-                return false;
-            }
-            else{
-                error2.style.display="none";
-                error2.innerHTML="";
-                return true;
-            }
-        }
-
-        function checkPassword(){
+        function checkValues() {
+            const emailVal = emailid.value.trim();
             const passwordVal = passwordid.value.trim();
-            const cpasswordVal=cpasswordid.value.trim();
-            if(!(cpasswordVal===passwordVal)){
-                error3.style.display="block";
-                error3.innerHTML="Passwords do not match";
+            if (!emailVal || !passwordVal) {
+                generalError.style.display = "block";
+                generalError.innerHTML = "All fields are required";
                 return false;
-            }
-            else{
-                error3.style.display="none";
-                error3.innerHTML="";
+            } else {
+                generalError.style.display = "none";
+                generalError.innerHTML = "";
                 return true;
             }
         }
-  
 
+        function validatePassword() {
+            const passwordVal = passwordid.value.trim();
+            if (passwordVal && passwordVal.length < 8) {
+                error2.style.display = "block";
+                error2.innerHTML = "Password should contain at least 8 characters";
+                return false;
+            } else {
+                error2.style.display = "none";
+                error2.innerHTML = "";
+                return true;
+            }
+        }
 
-   document.addEventListener('DOMContentLoaded',function(){
-    signupform.addEventListener("submit",function(e){
-    
-                let valueCheck=checkValues(e);
-                let emailValidation=validateEmail();
-                let passwordValidation=validatePassword();
-                let passwordCheck=checkPassword();
+        function checkPassword() {
+            const passwordVal = passwordid.value.trim();
+            const cpasswordVal = cpasswordid.value.trim();
+            if (cpasswordVal && !(cpasswordVal === passwordVal)) {
+                error3.style.display = "block";
+                error3.innerHTML = "Passwords do not match";
+                return false;
+            } else {
+                error3.style.display = "none";
+                error3.innerHTML = "";
+                return true;
+            }
+        }
 
-                if(!emailValidation || !passwordValidation || !passwordCheck || !valueCheck){
-                    console.log("validation failed");
-                   e.preventDefault();
+        document.addEventListener('DOMContentLoaded', function() {
+            signupform.addEventListener("submit", async function(e) {
+                e.preventDefault();
+
+                error1.style.display = "none";
+                error1.innerHTML = "";
+                error2.style.display = "none";
+                error2.innerHTML = "";
+                error3.style.display = "none";
+                error3.innerHTML = "";
+                generalError.style.display = "none";
+                generalError.innerHTML = "";
+
+                const emailValidation = validateEmail();
+                const passwordValidation = validatePassword();
+                const passwordCheck = checkPassword();
+                const valueCheck = checkValues();
+
+                if (!emailValidation || !passwordValidation || !passwordCheck || !valueCheck) {
+                    console.log("Client-side validation failed");
+                    return;
                 }
-            })
-    })
-   
-  </script>
 
+                const email = emailid.value.trim();
+                const password = passwordid.value.trim();
+                const cpassword = cpasswordid.value.trim();
 
+                try {
+                    const response = await fetch('/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password, cpassword }),
+                    });
 
+                    const result = await response.text(); // Handle HTML response from res.render
+                    console.log('Server response:', result);
+
+                    if (response.ok) {
+                        document.open();
+                        document.write(result);
+                        document.close();
+                    } else {
+                        const jsonResult = JSON.parse(result);
+                        if (jsonResult.message.includes('email already exists')) {
+                            error1.style.display = "block";
+                            error1.innerHTML = jsonResult.message;
+                        } else if (jsonResult.message.includes('Passwords do not match')) {
+                            error3.style.display = "block";
+                            error3.innerHTML = jsonResult.message;
+                        } else if (jsonResult.message.includes('Failed to send OTP')) {
+                            generalError.style.display = "block";
+                            generalError.innerHTML = jsonResult.message;
+                        } else {
+                            generalError.style.display = "block";
+                            generalError.innerHTML = jsonResult.message;
+                        }
+                    }
+                } catch (error) {
+                    generalError.style.display = "block";
+                    generalError.innerHTML = "An error occurred. Please try again.";
+                    console.error('Signup error:', error);
+                }
+            });
+        });
+    </script>
 </body>
 </html>
-<%-include("../partials/user/footer")%>
+<%- include("../partials/user/footer") %>

@@ -1,4 +1,4 @@
-<!-- index.html -->
+<!-- index.html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,4 +42,95 @@
     <script src="/script/login.js"></script>
 </body>
 </html>
-<%- include("../../views/partials/user/footer") %>
+<%- include("../../views/partials/user/footer") %> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSF7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <%- include("../partials/user/header") %>
+    
+    <div class="container">
+        <div class="content">
+            <div class="left-side">
+                <div class="left-side-img">
+                    <img src="/images/signup logo.jpg" alt="Signup Logo">
+                </div>
+            </div>
+            <div class="right-side">
+                <div class="login-form">
+                    <h2>Login to Sneakify</h2>
+                    <h5>Enter Your Details below</h5>
+                    <form id="loginform" method="post">
+                        <input type="text" name="email" id="email" placeholder="Email or Phone Number" required />
+                        <div id="error1" class="error-message"></div>
+                        <input type="password" name="password" id="password" placeholder="Password" required />
+                        <div id="error2" class="error-message"></div>
+                        <div id="generalError" class="error-message" style="color: red;"><%= message || '' %></div>
+                        <div class="form-actions">
+                            <button type="submit" class="login-button">Login</button>
+                            <a href="/forgot-password" class="forget-password">Forgot Password?</a>
+                        </div>
+                    </form>
+                    <p>Don't have an account? <a href="/user/signup" id="signup">Sign Up</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('loginform').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const error1 = document.getElementById('error1');
+            const error2 = document.getElementById('error2');
+            const generalError = document.getElementById('generalError');
+
+            error1.textContent = '';
+            error1.style.display = 'none';
+            error2.textContent = '';
+            error2.style.display = 'none';
+            generalError.textContent = '';
+            generalError.style.display = 'none';
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const result = await response.json();
+                console.log('Server response:', result);
+
+                if (result.success) {
+                    window.location.href = result.redirectUrl;
+                } else {
+                    if (result.message.includes('User not found') || result.message.includes('blocked')) {
+                        error1.textContent = result.message;
+                        error1.style.display = 'block';
+                    } else if (result.message.includes('Incorrect Password')) {
+                        error2.textContent = result.message;
+                        error2.style.display = 'block';
+                    } else {
+                        generalError.textContent = result.message;
+                        generalError.style.display = 'block';
+                    }
+                }
+            } catch (error) {
+                generalError.textContent = 'An error occurred. Please try again.';
+                generalError.style.display = 'block';
+                console.error('Login error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
+<%- include("../partials/user/footer") %>

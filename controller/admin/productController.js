@@ -4,11 +4,10 @@ const path = require('path');
 const fs = require('fs');
 const { upload, processImages } = require('../../middlewares/multerConfig');
 
-// Get all products
 const getProducts = async (req, res) => {
     try {
         const products = await Product.find({ isDeleted: false })
-            .populate('category'); // Populate the category field
+            .populate('category'); 
         res.render('admin-product', { products });
     } catch (error) {
         console.error(error);
@@ -16,7 +15,6 @@ const getProducts = async (req, res) => {
     }
 };
 
-// Render add product page
 const getAddProduct = async (req, res) => {
     try {
         const categories = await Category.find({ isDeleted: false });
@@ -67,7 +65,7 @@ const addProduct = async (req, res) => {
 
         const product = new Product({
             name,
-            description, // Added description
+            description, 
             brand,
             price: parseFloat(price),
             stock: parseInt(stock, 10),
@@ -89,7 +87,6 @@ const addProduct = async (req, res) => {
     }
 };
 
-// Render edit product page
 const getEditProduct = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
@@ -105,17 +102,16 @@ const getEditProduct = async (req, res) => {
     }
 };
 
-// Update product
 const editProduct = async (req, res) => {
     try {
-        const { name, description, brand, price, stock, status, category } = req.body; // Changed stockCount to stock
+        const { name, description, brand, price, stock, status, category, imagesToDelete } = req.body; 
         const product = await Product.findById(req.params.id);
+        const imagesToDeleteArray = imagesToDelete ? JSON.parse(imagesToDelete) : [];
 
         if (!product) {
             return res.status(404).send('Product not found');
         }
 
-        // Validate required fields
         if (!name || !brand || !price || !stock || !status || !category) {
             const categories = await Category.find();
             return res.render('edit-product', {
@@ -125,16 +121,26 @@ const editProduct = async (req, res) => {
             });
         }
 
-        // Update basic fields
         product.name = name;
-        product.description = description || product.description; // Optional
+        product.description = description || product.description; 
         product.brand = brand;
         product.price = parseFloat(price);
-        product.stock = parseInt(stock, 10); // Changed stockCount to stock
+        product.stock = parseInt(stock, 10); 
         product.status = status;
         product.category = category;
 
-        // Handle new images if uploaded
+        // Handle image deletion
+        if (imagesToDeleteArray.length > 0) {
+            imagesToDeleteArray.forEach(image => {
+                const imagePath = path.join(__dirname, '../../public', image);
+                if (fs.existsSync(imagePath)) {
+                    fs.unlinkSync(imagePath);
+                }
+                product.images = product.images.filter(img => img !== image);
+            });
+        }
+
+        // Handle new image uploads
         if (req.files && req.files.length > 0) {
             if (req.files.length < 3) {
                 const categories = await Category.find();
@@ -145,20 +151,21 @@ const editProduct = async (req, res) => {
                 });
             }
 
-            // Delete old images
-            for (const image of product.images) {
-                const imagePath = path.join(__dirname, '../../public', image);
-                if (fs.existsSync(imagePath)) {
-                    fs.unlinkSync(imagePath);
-                }
-            }
-
-            // Process and save new images
             const processedImagePaths = await processImages(req.files);
             if (!processedImagePaths || processedImagePaths.length === 0) {
                 throw new Error('Image processing failed');
             }
-            product.images = processedImagePaths;
+            product.images = [...product.images, ...processedImagePaths];
+        }
+
+        // Ensure minimum 3 images after all operations
+        if (product.images.length < 3) {
+            const categories = await Category.find();
+            return res.render('edit-product', {
+                product,
+                categories,
+                message: 'Product must have at least 3 images'
+            });
         }
 
         await product.save();
@@ -173,7 +180,7 @@ const editProduct = async (req, res) => {
         });
     }
 };
-// Soft delete product
+
 const deleteProduct = async (req, res) => {
     try {
         await Product.findByIdAndUpdate(req.params.id, { isDeleted: true });

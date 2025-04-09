@@ -248,6 +248,15 @@
             border-top: 1px solid white;
             margin-top: 20px;
         }
+        .invalid-feedback {
+            display: none;
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .form-control.is-invalid {
+            border-color: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -274,7 +283,7 @@
             <div class="col-md-3">
                 <div class="filter-section">
                     <h5>Filters</h5>
-                    <form action="/products" method="GET">
+                    <form id="filterForm" action="/products" method="GET" onsubmit="return validateFilters(event)">
                         <!-- Category Filter -->
                         <div class="mb-3">
                             <label for="category" class="form-label">Category</label>
@@ -291,12 +300,15 @@
                             <label class="form-label">Price Range</label>
                             <div class="row">
                                 <div class="col">
-                                    <input type="number" name="minPrice" class="form-control" placeholder="Min" value="<%= minPrice %>">
+                                    <input type="number" name="minPrice" id="minPrice" class="form-control" placeholder="Min" value="<%= minPrice %>" min="0" step="0.01">
+                                    <div id="minPriceFeedback" class="invalid-feedback">Minimum price must be 0 or greater.</div>
                                 </div>
                                 <div class="col">
-                                    <input type="number" name="maxPrice" class="form-control" placeholder="Max" value="<%= maxPrice %>">
+                                    <input type="number" name="maxPrice" id="maxPrice" class="form-control" placeholder="Max" value="<%= maxPrice %>" min="0" step="0.01">
+                                    <div id="maxPriceFeedback" class="invalid-feedback">Maximum price must be 0 or greater.</div>
                                 </div>
                             </div>
+                            <div id="priceRangeFeedback" class="invalid-feedback">Maximum price must be greater than minimum price.</div>
                         </div>
 
                         <!-- Brand Filter -->
@@ -351,7 +363,6 @@
                                     <p class="text-muted"><%= product.brand %></p>
                                     <div>
                                         <% 
-                                            // Hardcode discount UI for specific products (e.g., first 2 products)
                                             const originalPrice = product.price;
                                             const isDiscounted = index < 2; // Apply discount to first 2 products only
                                             const discountedPrice = isDiscounted ? Math.round(originalPrice * 0.9) : originalPrice; // 10% off
@@ -385,5 +396,47 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function validateFilters(event) {
+            const minPrice = document.getElementById('minPrice').value;
+            const maxPrice = document.getElementById('maxPrice').value;
+            let isValid = true;
+
+            // Reset feedback classes
+            document.getElementById('minPrice').classList.remove('is-invalid');
+            document.getElementById('maxPrice').classList.remove('is-invalid');
+            document.getElementById('minPriceFeedback').style.display = 'none';
+            document.getElementById('maxPriceFeedback').style.display = 'none';
+            document.getElementById('priceRangeFeedback').style.display = 'none';
+
+            // Validate minimum price
+            if (minPrice !== '' && (isNaN(minPrice) || minPrice < 0)) {
+                document.getElementById('minPrice').classList.add('is-invalid');
+                document.getElementById('minPriceFeedback').style.display = 'block';
+                isValid = false;
+            }
+
+            // Validate maximum price
+            if (maxPrice !== '' && (isNaN(maxPrice) || maxPrice < 0)) {
+                document.getElementById('maxPrice').classList.add('is-invalid');
+                document.getElementById('maxPriceFeedback').style.display = 'block';
+                isValid = false;
+            }
+
+            // Validate price range (min must be less than max if both are provided)
+            if (minPrice !== '' && maxPrice !== '' && parseFloat(minPrice) >= parseFloat(maxPrice)) {
+                document.getElementById('minPrice').classList.add('is-invalid');
+                document.getElementById('maxPrice').classList.add('is-invalid');
+                document.getElementById('priceRangeFeedback').style.display = 'block';
+                isValid = false;
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+            }
+
+            return isValid;
+        }
+    </script>
 </body>
 </html>

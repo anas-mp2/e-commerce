@@ -6,7 +6,7 @@ const fs = require('fs');
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadDir = path.join(__dirname, '../public/images/products/');
-        console.log('Upload directory:', uploadDir); // Debug the path
+        console.log('Upload directory:', uploadDir); 
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -41,8 +41,8 @@ const processImages = async (files) => {
     for (const file of files) {
         const inputPath = path.join(__dirname, '../public/images/products/', file.filename);
         const outputPath = path.join(__dirname, '../public/images/products/', `processed-${file.filename}`);
-        console.log('Input Path:', inputPath); // Debug
-        console.log('Output Path:', outputPath); // Debug
+        console.log('Input Path:', inputPath);
+        console.log('Output Path:', outputPath);
         try {
             await sharp(inputPath)
                 .resize(800, 800, { 
@@ -58,7 +58,7 @@ const processImages = async (files) => {
             imagePaths.push(`/images/products/${file.filename}`);
         }
     }
-    console.log('Processed image paths:', imagePaths); // Debug
+    console.log('Processed image paths:', imagePaths); 
     return imagePaths;
 };
 

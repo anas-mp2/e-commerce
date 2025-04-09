@@ -8,6 +8,7 @@ body {
     background-color: #121212;
     color: #e0e0e0;
 }
+
 .container {
     background-color: #1e1e1e;
     padding: 2rem;
@@ -15,15 +16,18 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     text-align: center;
 }
+
 h1 {
     margin-bottom: 1rem;
     color: #ffffff;
 }
+
 .otp-input {
     display: flex;
     justify-content: center;
     margin-bottom: 1rem;
 }
+
 .otp-input input {
     width: 40px;
     height: 40px;
@@ -35,14 +39,17 @@ h1 {
     background-color: #2a2a2a;
     color: #ffffff;
 }
+
 .otp-input input::-webkit-outer-spin-button,
 .otp-input input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-.otp-input input[type=number] {
+
+.otp-input input[type="number"] {
     -moz-appearance: textfield;
 }
+
 button {
     background-color: #4CAF50;
     color: white;
@@ -51,18 +58,63 @@ button {
     font-size: 1rem;
     border-radius: 4px;
     cursor: pointer;
-    margin: 5px;
+    margin: 10px; /* Consistent spacing */
 }
+
 button:hover {
     background-color: #45a049;
 }
+
 button:disabled {
-    background-color: #cccccc;
-    color: #666666;
+    background-color: #666;
+    color: #999;
     cursor: not-allowed;
+    opacity: 0.6;
 }
+
 #timer {
     font-size: 1.2rem;
     margin-bottom: 1rem;
     color: #ff9800;
+}
+
+#timer.expired {
+    color: #ff4444; /* Red when expired */
+}
+
+.error-message {
+    color: #ff4444;
+    font-size: 0.9rem;
+    display: none;
+    margin-bottom: 1rem;
+}
+
+#resendForgotPasswordOtpForm {
+    margin-top: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+#resendForgotPasswordOtpForm.visible {
+    opacity: 1;
+}
+
+#resendForgotPasswordOtpForm button {
+    background-color: #007bff;
+}
+
+#resendForgotPasswordOtpForm button:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+    .otp-input input {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+    }
+    .container {
+        padding: 1rem;
+    }
 }
