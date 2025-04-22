@@ -6,6 +6,7 @@
     <title>OTP Verification</title>
     <link rel="stylesheet" href="/styles/verify-otp.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <form action="/verify-otp" onsubmit="return validateOTPForm()" method="post">
@@ -22,11 +23,11 @@
                 <input class="otp" type="number" required>
             </div>
             <button type="submit">Verify</button>
-        </form>
-        <form action="/resend-otp" onsubmit="return resendOtp()" method="post">
-            <button type="submit" >Resend Code</button>
+            <form action="/resend-otp" onsubmit="return resendOTP(event)" method="post">
+                <button type="submit" id="resendButton" disabled>Resend Code</button>
+            </form>
         </div>
-        </form>
+    </form>
     <script src="/script/verify-otp.js"></script>
 </body>
 </html>

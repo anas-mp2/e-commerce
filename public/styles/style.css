@@ -345,4 +345,40 @@ footer {
     font-size: 0.75rem;
     display:none
 }
+/* Logout Button */
+.logout-btn {
+    color: #fff;
+    background-color: #dc3545; /* Red for logout */
+    padding: 8px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 1em;
+    margin-left: 10px;
+}
+
+.logout-btn:hover {
+    background-color: #c82333;
+}
+
+/* Toast Notification (for AJAX logout) */
+.toast {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 5px;
+    color: white;
+    font-size: 1em;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.toast.success {
+    background-color: #28a745; /* Green */
+}
+
+.toast.error {
+    background-color: #dc3545; /* Red */
+}
 

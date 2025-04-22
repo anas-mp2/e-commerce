@@ -2,7 +2,7 @@ const Product = require('../../model/productSchema');
 const Category = require('../../model/categorySchema');
 const path = require('path');
 const fs = require('fs');
-const { upload, processImages } = require('../../middlewares/multerConfig');
+const { upload, processImages } = require('../../middleware/multerConfig');
 
 // Get all products
 const getProducts = async (req, res) => {
@@ -106,73 +106,53 @@ const getEditProduct = async (req, res) => {
 };
 
 // Update product
-const editProduct = async (req, res) => {
-    try {
-        const { name, description, brand, price, stock, status, category } = req.body; // Changed stockCount to stock
-        const product = await Product.findById(req.params.id);
-
-        if (!product) {
-            return res.status(404).send('Product not found');
-        }
-
-        // Validate required fields
-        if (!name || !brand || !price || !stock || !status || !category) {
-            const categories = await Category.find();
-            return res.render('edit-product', {
-                product,
-                categories,
-                message: 'All fields except description are required'
-            });
-        }
-
-        // Update basic fields
-        product.name = name;
-        product.description = description || product.description; // Optional
-        product.brand = brand;
-        product.price = parseFloat(price);
-        product.stock = parseInt(stock, 10); // Changed stockCount to stock
-        product.status = status;
-        product.category = category;
-
-        // Handle new images if uploaded
-        if (req.files && req.files.length > 0) {
-            if (req.files.length < 3) {
-                const categories = await Category.find();
-                return res.render('edit-product', {
-                    product,
-                    categories,
-                    message: 'Please upload at least 3 images if updating images'
-                });
+const editProduct = [
+    // Validation middleware here
+    async (req, res) => {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return res.status(400).json({ errors: errors.array() });
             }
 
-            // Delete old images
-            for (const image of product.images) {
-                const imagePath = path.join(__dirname, '../../public', image);
-                if (fs.existsSync(imagePath)) {
-                    fs.unlinkSync(imagePath);
+            const { id } = req.params;
+            const { name, description, brand, price, stock, status, category, deletedImages } = req.body;
+
+            const product = await Product.findById(id);
+            if (!product) return res.status(404).json({ message: 'Product not found' });
+
+            // Update product fields
+            product.name = name;
+            product.description = description;
+            product.brand = brand;
+            product.price = price;
+            product.stock = stock;
+            product.status = status;
+            product.category = category;
+
+            // Handle new images
+            if (req.files && req.files.length > 0) {
+                // Process new images (e.g., using multer and sharp as before)
+                product.images = req.files.map(file => file.path);
+            }
+
+            // Handle deleted images
+            if (deletedImages) {
+                const deletedImageUrls = deletedImages.split(',');
+                for (const imageUrl of deletedImageUrls) {
+                    const filePath = path.join(__dirname, '..', 'public', imageUrl.replace('/uploads/', ''));
+                    await fs.unlink(filePath).catch(err => console.log(`Failed to delete ${filePath}:`, err));
+                    product.images = product.images.filter(img => img !== imageUrl);
                 }
             }
 
-            // Process and save new images
-            const processedImagePaths = await processImages(req.files);
-            if (!processedImagePaths || processedImagePaths.length === 0) {
-                throw new Error('Image processing failed');
-            }
-            product.images = processedImagePaths;
+            await product.save();
+            res.redirect('/admin/products');
+        } catch (error) {
+            res.status(500).json({ message: 'Server error', error });
         }
-
-        await product.save();
-        res.redirect('/admin/products');
-    } catch (error) {
-        console.error('Edit product error:', error.message, error.stack);
-        const categories = await Category.find();
-        res.status(500).render('edit-product', {
-            product: await Product.findById(req.params.id) || {},
-            categories,
-            message: `An error occurred while updating the product: ${error.message}. Please try again.`
-        });
     }
-};
+];
 // Soft delete product
 const deleteProduct = async (req, res) => {
     try {

@@ -3,7 +3,7 @@ const router = express.Router();
 const adminController = require('../controller/admin/adminController');
 const categoryController = require('../controller/admin/categoryController');
 const productController = require('../controller/admin/productController');
-const { upload } = require('../middlewares/multerConfig'); // Destructure upload
+const { upload } = require('../middleware/multerConfig'); // Destructure upload
 console.log('Upload from multerConfig:', upload);
 
 // Admin Login Routes

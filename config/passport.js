@@ -13,17 +13,34 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        
+        // Log profile for debugging
+        console.log("Google profile:", JSON.stringify(profile, null, 2));
+
+        // Ensure email exists
+        if (!profile.emails || !profile.emails.length) {
+          console.error("No email provided in Google profile");
+          return done(new Error("Email not provided by Google"), null);
+        }
+
         let user = await User.findOne({ email: profile.emails[0].value });
 
         if (user) {
-          user.profilePicture = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : user.profilePicture;
-          await user.save();
+          // Update profile picture for existing user using updateOne to avoid validation
+          await User.updateOne(
+            { email: profile.emails[0].value },
+            {
+              $set: {
+                profilePicture: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : user.profilePicture,
+              },
+            }
+          );
           return done(null, user);
         } else {
-          
+          // Provide robust fallback for name
+          const userName = profile.displayName || (profile.emails[0].value ? profile.emails[0].value.split('@')[0] : 'Unknown');
+
           user = new User({
-            name: profile.displayName,
+            name: userName,
             email: profile.emails[0].value,
             googleId: profile.id,
             profilePicture: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : '',
@@ -32,6 +49,7 @@ passport.use(
           return done(null, user);
         }
       } catch (error) {
+        console.error("Error in GoogleStrategy:", error);
         return done(error, null);
       }
     }

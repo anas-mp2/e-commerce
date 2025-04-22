@@ -68,7 +68,8 @@ const getShopProducts = async (req, res) => {
             maxPrice: maxPrice || '',
             brand: brand || '',
             sort: sort || '',
-            error: error || ''
+            error: error || '',
+            session: req.session // Add session
         });
     } catch (error) {
         console.error(error);

@@ -1,10 +1,10 @@
-<!-- index.html -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Page</title>
+    <title>Signup Page</title>
     <link rel="stylesheet" href="/styles/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
@@ -23,16 +23,18 @@
                     <h2>Create an Account</h2>
                     <h5>Enter Your Details below</h5>
                     <form id="signupform" method="post" action="/signup">
-                        <input type="text" name="email" id="email" placeholder="Email" />
+                        <input type="text" name="name" id="name" placeholder="Name" />
                         <div id="error1" class="error-message"></div>
-                        <input type="password" name="password" id="password" placeholder="Password" />
+                        <input type="text" name="email" id="email" placeholder="Email" />
                         <div id="error2" class="error-message"></div>
-                        <input type="password" name="cpassword" id="cpassword" placeholder="Confirm Password" />
+                        <input type="password" name="password" id="password" placeholder="Password" />
                         <div id="error3" class="error-message"></div>
+                        <input type="password" name="cpassword" id="cpassword" placeholder="Confirm Password" />
+                        <div id="error4" class="error-message"></div>
                         <p style="color: red;"><% if (message) { %><%= message %><% } %></p>
                         <div class="form-actions">
                             <button type="submit" class="login-button">Signup</button>
-                            <a href="/auth/google/logout" class="google-signup-button">
+                            <a href="/auth/google" class="google-signup-button" id="googleAuthBtn">
                                 <img src="/images/Google_Icons-09-512.webp" class="google-logo" alt=""> 
                                 Sign Up With Google
                             </a>                        
@@ -44,95 +46,8 @@
         </div>
     </div>
     
-  
-
-  <script>
-    const signupform=document.getElementById('signupform');
-    const emailid=document.getElementById('email');
-    const passwordid=document.getElementById('password');
-    const cpasswordid=document.getElementById('cpassword');
-    const error1=document.getElementById('error1');
-    const error2=document.getElementById('error2');
-    const error3=document.getElementById('error3');
+    <script src="/script/signup.js"></script>
     
-
-    function validateEmail(){
-            const emailVal=emailid.value.trim();
-            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-
-            if(emailVal && !emailPattern.test(emailVal)){
-               error1.style.display="block";
-               error1.innerHTML="Invalid Email Format";
-               return false;
-            }
-            else{
-                error1.style.display="none";
-                error1.innerHTML="";
-                return true;
-            }
-        }
-        
-        function checkValues(e){
-            const emailVal=emailid.value.trim();
-            const passwordVal=passwordid.value.trim();
-            if(! emailVal || !passwordVal){
-                alert("All fields are required");
-                e.preventDefault();
-                return false;
-            }
-            return true;
-        }
-
-        function validatePassword(){
-            const passwordVal=passwordid.value.trim();
-            if(passwordVal && passwordVal.length<8){
-                error2.style.display="block";
-                error2.innerHTML="Password should contain atleast 8 characters";
-                return false;
-            }
-            else{
-                error2.style.display="none";
-                error2.innerHTML="";
-                return true;
-            }
-        }
-
-        function checkPassword(){
-            const passwordVal = passwordid.value.trim();
-            const cpasswordVal=cpasswordid.value.trim();
-            if(!(cpasswordVal===passwordVal)){
-                error3.style.display="block";
-                error3.innerHTML="Passwords do not match";
-                return false;
-            }
-            else{
-                error3.style.display="none";
-                error3.innerHTML="";
-                return true;
-            }
-        }
-  
-
-
-   document.addEventListener('DOMContentLoaded',function(){
-    signupform.addEventListener("submit",function(e){
-    
-                let valueCheck=checkValues(e);
-                let emailValidation=validateEmail();
-                let passwordValidation=validatePassword();
-                let passwordCheck=checkPassword();
-
-                if(!emailValidation || !passwordValidation || !passwordCheck || !valueCheck){
-                    console.log("validation failed");
-                   e.preventDefault();
-                }
-            })
-    })
-   
-  </script>
-
-
-
+    <%- include("../partials/user/footer") %>
 </body>
 </html>
-<%-include("../partials/user/footer")%>

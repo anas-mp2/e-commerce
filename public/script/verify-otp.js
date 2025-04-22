@@ -4,7 +4,10 @@ const resendButton = document.getElementById('resendButton');
 let timeLeft = 180; // 3 minutes
 let timerId;
 
+// Function to start or restart the timer
 function startTimer() {
+    clearInterval(timerId); // Clear any existing timer
+    timeLeft = 180; // Reset to 3 minutes
     timerId = setInterval(() => {
         if (timeLeft <= 0) {
             clearInterval(timerId);
@@ -20,11 +23,23 @@ function startTimer() {
     }, 1000);
 }
 
+// Determine if this is signup or forgot password page
+const isForgotPassword = window.location.pathname.includes('forgot-password-otp'); // Adjust based on your route
+
+document.addEventListener('DOMContentLoaded', () => {
+    startTimer(); // Start timer on page load
+
+    // Handle resend OTP
+    resendButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        resendOTP();
+    });
+});
 
 function validateOTPForm() {
     const otp = Array.from(inputs).map(input => input.value).join('');
 
-    fetch('/verify-otp', {
+    fetch(isForgotPassword ? '/verify-forgot-password-otp' : '/verify-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ otp })
@@ -38,13 +53,13 @@ function validateOTPForm() {
                 showConfirmButton: false,
                 timer: 1500
             }).then(() => {
-                window.location.href = data.redirectUrl;
+                window.location.href = data.redirectUrl || '/';
             });
         } else {
             Swal.fire({
                 icon: "error",
                 title: "Error",
-                text: data.message
+                text: data.message || "Invalid OTP"
             });
         }
     })
@@ -59,22 +74,29 @@ function validateOTPForm() {
     return false; // Prevent form from submitting the traditional way
 }
 
-function resendOTP(event) {
-    event.preventDefault();
-
+function resendOTP() {
     $.ajax({
         type: "POST",
-        url: "/resend-otp",
+        url: isForgotPassword ? '/resend-forgot-password-otp' : '/resend-otp',
         success: function(response) {
             if (response.success) {
-                // Show the OTP input form and the success message
-                document.getElementById("otpContainer").style.display = "block"; // Show the OTP form
-                document.getElementById("successMessage").textContent = response.message; // Display success message
+                Swal.fire({
+                    icon: "success",
+                    title: "OTP Resent",
+                    text: response.message || "A new OTP has been sent to your device.",
+                    timer: 1500
+                });
+                inputs.forEach(input => {
+                    input.value = '';
+                    input.disabled = false;
+                });
+                resendButton.disabled = true;
+                startTimer(); // Restart timer after resend
             } else {
                 Swal.fire({
                     icon: "error",
                     title: "Error",
-                    text: response.message
+                    text: response.message || "Failed to resend OTP."
                 });
             }
         },
@@ -87,7 +109,3 @@ function resendOTP(event) {
         }
     });
 }
-
-
-
-startTimer();
