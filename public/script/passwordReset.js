@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (result.success) {
                 showToast('Password changed successfully!', true);
                 setTimeout(() => {
-                    window.location.href = '/';
+                    window.location.href = '/'; // Redirect to login page
                 }, 3000);
             } else {
                 error1.style.display = 'block';

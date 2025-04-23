@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="/styles/style.css">
+</head>
+<body>
+    <%- include('../partials/user/header') %>
+    <div class="edit-profile-container">
+        <h1>Edit Profile</h1>
+        <form id="editProfileForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" value="<%= user.name %>" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="<%= user.email %>" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone:</label>
+                <input type="text" id="phone" name="phone" value="<%= user.phone || '' %>">
+            </div>
+            <div class="form-group">
+                <label for="profilePicture">Profile Picture:</label>
+                <input type="file" id="profilePicture" name="profilePicture" accept="image/*">
+            </div>
+            <h2>Addresses</h2>
+            <div id="addresses">
+                <% user.addresses.forEach((address, index) => { %>
+                    <div class="address-form" data-index="<%= index %>">
+                        <div class="form-group">
+                            <label>Street:</label>
+                            <input type="text" name="addresses[<%= index %>][street]" value="<%= address.street %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label>City:</label>
+                            <input type="text" name="addresses[<%= index %>][city]" value="<%= address.city %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label>State:</label>
+                            <input type="text" name="addresses[<%= index %>][state]" value="<%= address.state %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Zip:</label>
+                            <input type="text" name="addresses[<%= index %>][zip]" value="<%= address.zip %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Country:</label>
+                            <input type="text" name="addresses[<%= index %>][country]" value="<%= address.country %>" required>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" name="addresses[<%= index %>][isDefault]" <%= address.isDefault ? 'checked' : '' %>>
+                                Default Address
+                            </label>
+                            <button type="button" class="btn remove-address">Remove</button>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+            <button type="button" id="addAddress" class="btn">Add Address</button>
+            <button type="submit" class="btn">Save Changes</button>
+        </form>
+        <p id="error" class="error-message"></p>
+        <p id="success" style="color: green;"></p>
+    </div>
+    <footer>
+        <%- include('../partials/user/footer') %>
+    </footer>
+    <script src="/script/edit-profile.js"></script>
+</body>
+</html>

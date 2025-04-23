@@ -1,9 +1,11 @@
 const User = require('../../model/userSchema');
 const Product = require('../../model/productSchema'); // Adjust path to your Product model
 const Category = require('../../model/categorySchema'); // Adjust path to your Category model
+const Order=require('../../model/orderSchema');
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv').config();
 const bcrypt = require('bcrypt');
+const path = require('path');
 
 const loadLoginPage = async (req, res) => {
     try {
@@ -11,9 +13,7 @@ const loadLoginPage = async (req, res) => {
             console.log('User already logged in, redirecting to /products');
             return res.redirect('/products');
         }
-        return res.render("login", { 
-            message: ""
-        }); 
+        return res.render("login", { message: "" });
     } catch (error) {
         console.log("Unable to load login page:", error);
         res.status(500).send("Server error");
@@ -389,6 +389,7 @@ const loadChangePasswordPage = async (req, res) => {
             console.log("No email in session, redirecting to forgot-password");
             return res.redirect("/forgot-password");
         }
+
         console.log('Rendering change-password.ejs with email:', req.session.email);
         res.render("change-password", { message: "", messageSuccess: "" });
     } catch (error) {
@@ -518,6 +519,178 @@ const loadProducts = async (req, res) => {
     }
 };
 
+const loadProfile = async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.redirect('/user/login');
+        }
+        const user = await User.findById(req.session.user);
+        const orders = await Order.find({ user: req.session.user }).populate('items.product');
+        res.render('profile', { user, orders });
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        res.render('pageNotFound');
+    }
+};
+
+const loadEditProfile = async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.redirect('/user/login');
+        }
+        const user = await User.findById(req.session.user);
+        res.render('edit-profile', { user });
+    } catch (error) {
+        console.error('Error loading edit profile:', error);
+        res.render('pageNotFound');
+    }
+};
+
+const editProfile = async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.status(401).json({ success: false, message: 'Unauthorized' });
+        }
+
+        const { name, email, phone, addresses } = req.body;
+        const user = await User.findById(req.session.user);
+        let emailChanged = false;
+
+        // Check if email changed
+        if (email !== user.email) {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.status(400).json({ success: false, message: 'Email already exists' });
+            }
+            emailChanged = true;
+            const otp = generateOtp();
+            const emailSent = await sendVerificationEmail(email, otp);
+            if (!emailSent) {
+                return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+            }
+            req.session.newEmail = email;
+            req.session.emailOtp = otp;
+            req.session.emailOtpExpires = new Date(Date.now() + 5 * 60000);
+        }
+
+        // Update profile picture
+        let profilePicture = user.profilePicture;
+        if (req.file) {
+            profilePicture = `/uploads/profile-pics/${req.file.filename}`;
+        }
+
+        // Process addresses
+        let parsedAddresses = [];
+        if (typeof addresses === 'string') {
+            parsedAddresses = JSON.parse(addresses);
+        } else if (Array.isArray(addresses)) {
+            parsedAddresses = addresses;
+        }
+
+        // Ensure only one default address
+        let hasDefault = false;
+        parsedAddresses = parsedAddresses.map(addr => {
+            if (addr.isDefault === 'on' || addr.isDefault === true) {
+                if (hasDefault) {
+                    addr.isDefault = false;
+                } else {
+                    hasDefault = true;
+                    addr.isDefault = true;
+                }
+            } else {
+                addr.isDefault = false;
+            }
+            return addr;
+        });
+
+        // Update user
+        await User.updateOne(
+            { _id: req.session.user },
+            {
+                $set: {
+                    name,
+                    phone,
+                    profilePicture,
+                    addresses: parsedAddresses
+                }
+            }
+        );
+
+        res.json({ success: true, emailChanged });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        res.status(500).json({ success: false, message: 'An error occurred' });
+    }
+};
+
+const verifyEmailOtp = async (req, res) => {
+    try {
+        const { otp } = req.body;
+        if (!req.session.newEmail || !req.session.emailOtp) {
+            return res.status(400).json({ success: false, message: 'Session expired' });
+        }
+
+        if (new Date() > req.session.emailOtpExpires) {
+            return res.status(400).json({ success: false, message: 'OTP expired' });
+        }
+
+        if (otp === req.session.emailOtp) {
+            await User.updateOne(
+                { _id: req.session.user },
+                { $set: { email: req.session.newEmail } }
+            );
+            delete req.session.newEmail;
+            delete req.session.emailOtp;
+            delete req.session.emailOtpExpires;
+            res.json({ success: true });
+        } else {
+            res.status(400).json({ success: false, message: 'Invalid OTP' });
+        }
+    } catch (error) {
+        console.error('Error verifying email OTP:', error);
+        res.status(500).json({ success: false, message: 'An error occurred' });
+    }
+};
+
+const resendEmailOtp = async (req, res) => {
+    try {
+        if (!req.session.newEmail) {
+            return res.status(400).json({ success: false, message: 'Session expired' });
+        }
+
+        const otp = generateOtp();
+        const emailSent = await sendVerificationEmail(req.session.newEmail, otp);
+        if (!emailSent) {
+            return res.status(500).json({ success: false, message: 'Failed to resend OTP' });
+        }
+
+        req.session.emailOtp = otp;
+        req.session.emailOtpExpires = new Date(Date.now() + 5 * 60000);
+        res.json({ success: true, message: 'OTP resent successfully' });
+    } catch (error) {
+        console.error('Error resending email OTP:', error);
+        res.status(500).json({ success: false, message: 'An error occurred' });
+    }
+};
+
+const cancelOrder = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const order = await Order.findOne({ _id: orderId, user: req.session.user });
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found' });
+        }
+        if (order.status !== 'Pending' && order.status !== 'Processing') {
+            return res.status(400).json({ success: false, message: 'Order cannot be cancelled' });
+        }
+        await Order.updateOne({ _id: orderId }, { $set: { status: 'Cancelled' } });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        res.status(500).json({ success: false, message: 'An error occurred' });
+    }
+};
+
 module.exports = {
     loadLoginPage,
     pageNotFound,
@@ -536,5 +709,11 @@ module.exports = {
     googleAuthCallback,
     logout,
     checkSession,
-    loadProducts
+    loadProducts,
+    loadProfile,
+    loadEditProfile,
+    editProfile,
+    verifyEmailOtp,
+    resendEmailOtp,
+    cancelOrder
 };
